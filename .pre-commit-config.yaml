@@ -1,0 +1,15 @@
+repos:
+  - repo: local
+    hooks:
+      - id: fmt
+        name: fmt
+        language: system
+        types: [ rust ]
+        entry: cargo fmt --check --all
+        pass_filenames: false
+      - id: clippy
+        name: clippy
+        language: system
+        types: [ rust ]
+        entry: cargo clippy --workspace -- -D warnings
+        pass_filenames: false

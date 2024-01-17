@@ -1,0 +1,40 @@
+name: PR
+
+on:
+  pull_request:
+    paths-ignore:
+      - 'README.md'
+
+permissions:
+  contents: read
+
+jobs:
+  test:
+    name: test
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        rust:
+          - 1.64.0 # MSRV
+          - stable
+          - beta
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions-rust-lang/setup-rust-toolchain@v1
+        with:
+          toolchain: ${{ matrix.rust }}
+      - name: Run tests
+        run: cargo test --workspace
+
+  lint:
+    name: fmt & lint
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions-rust-lang/setup-rust-toolchain@v1
+        with:
+          components: rustfmt, clippy
+      - name: Rustfmt Check
+        run: cargo fmt --check --all
+      - name: Clippy check
+        run: cargo clippy --workspace

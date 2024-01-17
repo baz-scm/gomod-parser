@@ -1,0 +1,17 @@
+[package]
+name = "gomod"
+version = "0.0.1"
+edition = "2021"
+rust-version = "1.64" # MSRV
+
+description = "Simple go.mod parser"
+keywords = ["gomod"]
+categories = ["encoding"]
+repository = "https://github.com/baz-scm/gomod-parser"
+readme = "README.md"
+license = "Apache-2.0"
+
+authors = ["Baz"]
+
+[dependencies]
+winnow = "0.5.34"
