@@ -13,5 +13,9 @@ license = "Apache-2.0"
 
 authors = ["Baz"]
 
+[package.metadata.release]
+push = false
+tag = false
+
 [dependencies]
 winnow = "0.5.34"
