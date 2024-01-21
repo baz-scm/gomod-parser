@@ -20,3 +20,6 @@ tag = false
 
 [dependencies]
 winnow = "0.5.34"
+
+[dev-dependencies]
+indoc = "2.0.4"

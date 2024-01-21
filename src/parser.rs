@@ -115,7 +115,7 @@ fn require_multi(input: &mut &str) -> PResult<Vec<ModuleDependency>> {
     let _ = ("(", multispace1).parse_next(input)?;
     let res: Vec<Vec<ModuleDependency>> =
         repeat(1.., terminated(require_single, multispace0)).parse_next(input)?;
-    let _ = (")", multispace1).parse_next(input)?;
+    let _ = (")", multispace0).parse_next(input)?;
 
     Ok(res.into_iter().flatten().collect::<Vec<ModuleDependency>>())
 }
@@ -188,7 +188,7 @@ fn replace_multi(input: &mut &str) -> PResult<Vec<ModuleReplacement>> {
     let _ = ("(", multispace1).parse_next(input)?;
     let res: Vec<Vec<ModuleReplacement>> =
         repeat(1.., terminated(replace_single, multispace0)).parse_next(input)?;
-    let _ = (")", multispace1).parse_next(input)?;
+    let _ = (")", multispace0).parse_next(input)?;
 
     Ok(res
         .into_iter()
@@ -248,7 +248,7 @@ fn retract_multi(input: &mut &str) -> PResult<Vec<ModuleRetract>> {
     let _ = ("(", multispace1).parse_next(input)?;
     let res: Vec<Vec<ModuleRetract>> =
         repeat(1.., terminated(retract_single, multispace0)).parse_next(input)?;
-    let _ = (")", multispace1).parse_next(input)?;
+    let _ = (")", multispace0).parse_next(input)?;
 
     Ok(res.into_iter().flatten().collect::<Vec<ModuleRetract>>())
 }
