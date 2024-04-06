@@ -5,7 +5,7 @@ repos:
         name: fmt
         language: system
         types: [ rust ]
-        entry: cargo fmt --check --all
+        entry: cargo fmt --all
         pass_filenames: false
       - id: clippy
         name: clippy
