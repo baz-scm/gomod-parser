@@ -14,6 +14,14 @@ fn get_test_file_content(file_name: &str) -> String {
 }
 
 #[test]
+fn test_parse_on_compress() {
+    let file_content = get_test_file_content("compress.mod");
+    let gomod = file_content.parse::<GoMod>().unwrap();
+
+    assert_eq!(gomod.module, "github.com/klauspost/compress".to_string());
+}
+
+#[test]
 fn test_parse_on_docker_docs() {
     let file_content = get_test_file_content("docker_docs.mod");
     let gomod = file_content.parse::<GoMod>().unwrap();

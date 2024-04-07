@@ -1,7 +1,7 @@
+use winnow::combinator::trace;
 use winnow::error::ParserError;
 use winnow::stream::{AsChar, Stream, StreamIsPartial};
 use winnow::token::take_till;
-use winnow::trace::trace;
 use winnow::{PResult, Parser};
 
 #[inline]
