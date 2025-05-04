@@ -4,7 +4,7 @@ use winnow::ascii::{multispace0, multispace1, space0, space1};
 use winnow::combinator::{fail, not, opt, peek, preceded, repeat, terminated};
 use winnow::stream::AsChar;
 use winnow::token::{any, take_till, take_while};
-use winnow::{dispatch, PResult, Parser};
+use winnow::{dispatch, ModalResult, Parser};
 
 const WHITESPACES: [char; 3] = [' ', '\t', '\n'];
 
@@ -20,11 +20,11 @@ pub(crate) enum Directive<'a> {
     Retract(Vec<ModuleRetract>),
 }
 
-pub(crate) fn gomod<'a>(input: &mut &'a str) -> PResult<Vec<Directive<'a>>> {
+pub(crate) fn gomod<'a>(input: &mut &'a str) -> ModalResult<Vec<Directive<'a>>> {
     repeat(0.., directive).parse_next(input)
 }
 
-fn directive<'a>(input: &mut &'a str) -> PResult<Directive<'a>> {
+fn directive<'a>(input: &mut &'a str) -> ModalResult<Directive<'a>> {
     let _ = take_while(0.., AsChar::is_newline).parse_next(input)?;
     dispatch!(peek(not_whitespace);
         "//" => comment,
@@ -40,7 +40,7 @@ fn directive<'a>(input: &mut &'a str) -> PResult<Directive<'a>> {
     .parse_next(input)
 }
 
-fn comment<'a>(input: &mut &'a str) -> PResult<Directive<'a>> {
+fn comment<'a>(input: &mut &'a str) -> ModalResult<Directive<'a>> {
     let res = preceded(
         (opt(space0), "//", opt(space0)),
         take_till(0.., AsChar::is_newline),
@@ -51,21 +51,21 @@ fn comment<'a>(input: &mut &'a str) -> PResult<Directive<'a>> {
     Ok(Directive::Comment(res))
 }
 
-fn module<'a>(input: &mut &'a str) -> PResult<Directive<'a>> {
+fn module<'a>(input: &mut &'a str) -> ModalResult<Directive<'a>> {
     let res = preceded(("module", space1), take_till(1.., AsChar::is_newline)).parse_next(input)?;
     let _ = take_while(1.., AsChar::is_newline).parse_next(input)?;
 
     Ok(Directive::Module(res))
 }
 
-fn go<'a>(input: &mut &'a str) -> PResult<Directive<'a>> {
+fn go<'a>(input: &mut &'a str) -> ModalResult<Directive<'a>> {
     let res = preceded(("go", space1), take_till(1.., AsChar::is_newline)).parse_next(input)?;
     let _ = take_while(1.., AsChar::is_newline).parse_next(input)?;
 
     Ok(Directive::Go(res))
 }
 
-fn toolchain<'a>(input: &mut &'a str) -> PResult<Directive<'a>> {
+fn toolchain<'a>(input: &mut &'a str) -> ModalResult<Directive<'a>> {
     let res =
         preceded(("toolchain", space1), take_till(1.., AsChar::is_newline)).parse_next(input)?;
     let _ = take_while(1.., AsChar::is_newline).parse_next(input)?;
@@ -73,7 +73,7 @@ fn toolchain<'a>(input: &mut &'a str) -> PResult<Directive<'a>> {
     Ok(Directive::Toolchain(res))
 }
 
-fn require<'a>(input: &mut &'a str) -> PResult<Directive<'a>> {
+fn require<'a>(input: &mut &'a str) -> ModalResult<Directive<'a>> {
     let res = preceded(
         ("require", space1),
         dispatch! {peek(any);
@@ -87,7 +87,7 @@ fn require<'a>(input: &mut &'a str) -> PResult<Directive<'a>> {
     Ok(Directive::Require(res))
 }
 
-fn require_single(input: &mut &str) -> PResult<Vec<ModuleDependency>> {
+fn require_single(input: &mut &str) -> ModalResult<Vec<ModuleDependency>> {
     // terminate, if `)` is found
     peek(not(')')).parse_next(input)?;
 
@@ -98,9 +98,7 @@ fn require_single(input: &mut &str) -> PResult<Vec<ModuleDependency>> {
     )
         .parse_next(input)?;
 
-    let indirect = opt(comment)
-        .parse_next(input)?
-        .map_or(false, |d| d == Directive::Comment("indirect"));
+    let indirect = opt(comment).parse_next(input)? == Some(Directive::Comment("indirect"));
 
     Ok(vec![ModuleDependency {
         module: Module {
@@ -111,7 +109,7 @@ fn require_single(input: &mut &str) -> PResult<Vec<ModuleDependency>> {
     }])
 }
 
-fn require_multi(input: &mut &str) -> PResult<Vec<ModuleDependency>> {
+fn require_multi(input: &mut &str) -> ModalResult<Vec<ModuleDependency>> {
     let _ = ("(", multispace1).parse_next(input)?;
     let res: Vec<Vec<ModuleDependency>> =
         repeat(1.., terminated(require_single, multispace0)).parse_next(input)?;
@@ -120,7 +118,7 @@ fn require_multi(input: &mut &str) -> PResult<Vec<ModuleDependency>> {
     Ok(res.into_iter().flatten().collect::<Vec<ModuleDependency>>())
 }
 
-fn exclude<'a>(input: &mut &'a str) -> PResult<Directive<'a>> {
+fn exclude<'a>(input: &mut &'a str) -> ModalResult<Directive<'a>> {
     let res = preceded(
         ("exclude", space1),
         dispatch! {peek(any);
@@ -134,7 +132,7 @@ fn exclude<'a>(input: &mut &'a str) -> PResult<Directive<'a>> {
     Ok(Directive::Exclude(res))
 }
 
-fn replace<'a>(input: &mut &'a str) -> PResult<Directive<'a>> {
+fn replace<'a>(input: &mut &'a str) -> ModalResult<Directive<'a>> {
     let res = preceded(
         ("replace", space1),
         dispatch! {peek(any);
@@ -148,7 +146,7 @@ fn replace<'a>(input: &mut &'a str) -> PResult<Directive<'a>> {
     Ok(Directive::Replace(res))
 }
 
-fn replace_single(input: &mut &str) -> PResult<Vec<ModuleReplacement>> {
+fn replace_single(input: &mut &str) -> ModalResult<Vec<ModuleReplacement>> {
     // terminate, if `)` is found
     peek(not(')')).parse_next(input)?;
 
@@ -184,7 +182,7 @@ fn replace_single(input: &mut &str) -> PResult<Vec<ModuleReplacement>> {
     }])
 }
 
-fn replace_multi(input: &mut &str) -> PResult<Vec<ModuleReplacement>> {
+fn replace_multi(input: &mut &str) -> ModalResult<Vec<ModuleReplacement>> {
     let _ = ("(", multispace1).parse_next(input)?;
     let res: Vec<Vec<ModuleReplacement>> =
         repeat(1.., terminated(replace_single, multispace0)).parse_next(input)?;
@@ -196,7 +194,7 @@ fn replace_multi(input: &mut &str) -> PResult<Vec<ModuleReplacement>> {
         .collect::<Vec<ModuleReplacement>>())
 }
 
-fn retract<'a>(input: &mut &'a str) -> PResult<Directive<'a>> {
+fn retract<'a>(input: &mut &'a str) -> ModalResult<Directive<'a>> {
     let res = preceded(
         ("retract", space1),
         dispatch! {peek(any);
@@ -210,7 +208,7 @@ fn retract<'a>(input: &mut &'a str) -> PResult<Directive<'a>> {
     Ok(Directive::Retract(res))
 }
 
-fn retract_single(input: &mut &str) -> PResult<Vec<ModuleRetract>> {
+fn retract_single(input: &mut &str) -> ModalResult<Vec<ModuleRetract>> {
     // terminate, if `)` is found
     peek(not(')')).parse_next(input)?;
 
@@ -226,7 +224,7 @@ fn retract_single(input: &mut &str) -> PResult<Vec<ModuleRetract>> {
     Ok(vec![res])
 }
 
-fn version_range(input: &mut &str) -> PResult<ModuleRetract> {
+fn version_range(input: &mut &str) -> ModalResult<ModuleRetract> {
     let lower_bound = preceded('[', take_till(1.., |c| c == ',' || c == ' ')).parse_next(input)?;
     let _ = (',', space0).parse_next(input)?;
     let upper_bound =
@@ -238,13 +236,13 @@ fn version_range(input: &mut &str) -> PResult<ModuleRetract> {
     ))
 }
 
-fn version_single(input: &mut &str) -> PResult<ModuleRetract> {
+fn version_single(input: &mut &str) -> ModalResult<ModuleRetract> {
     let version = terminated(take_till(1.., WHITESPACES), multispace1).parse_next(input)?;
 
     Ok(ModuleRetract::Single(version.to_string()))
 }
 
-fn retract_multi(input: &mut &str) -> PResult<Vec<ModuleRetract>> {
+fn retract_multi(input: &mut &str) -> ModalResult<Vec<ModuleRetract>> {
     let _ = ("(", multispace1).parse_next(input)?;
     let res: Vec<Vec<ModuleRetract>> =
         repeat(1.., terminated(retract_single, multispace0)).parse_next(input)?;

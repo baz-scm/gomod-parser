@@ -2,8 +2,11 @@ name: Release
 
 on:
   push:
-    tags:
-      - "*.*.*"
+    branches:
+      - main
+    paths-ignore:
+      - '.github/**'
+      - '.pre-commit-config.yaml'
 
 permissions:
   contents: read
@@ -27,9 +30,31 @@ jobs:
         with:
           github-token: ${{ secrets.GITHUB_TOKEN }}
 
-  release:
+  release-please:
     needs: coverage
-    name: release
+    runs-on: ubuntu-latest
+    environment: release
+    permissions:
+      contents: write # for googleapis/release-please-action to create release commit
+      pull-requests: write # for googleapis/release-please-action to create release PR
+    steps:
+      - uses: actions/create-github-app-token@v2
+        id: app-token
+        with:
+          app-id: ${{ vars.CI_GITHUB_APP_ID }}
+          private-key: ${{ secrets.CI_GITHUB_APP_PRIVATE_KEY }}
+      - uses: googleapis/release-please-action@v4
+        id: release
+        with:
+          token: ${{ steps.app-token.outputs.token }}
+          target-branch: main
+    outputs:
+      release_created: ${{ steps.release.outputs.release_created }}
+      release_tag_name: ${{ steps.release.outputs.tag_name }}
+
+  release:
+    if: ${{ needs.release-please.outputs.release_created }}
+    needs: release-please
     runs-on: ubuntu-latest
     environment: release
     steps:
