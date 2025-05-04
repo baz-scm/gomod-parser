@@ -2,10 +2,10 @@ use winnow::combinator::trace;
 use winnow::error::ParserError;
 use winnow::stream::{AsChar, Stream, StreamIsPartial};
 use winnow::token::take_till;
-use winnow::{PResult, Parser};
+use winnow::{ModalResult, Parser};
 
 #[inline]
-pub fn not_whitespace<I, E: ParserError<I>>(input: &mut I) -> PResult<<I as Stream>::Slice, E>
+pub fn not_whitespace<I, E: ParserError<I>>(input: &mut I) -> ModalResult<<I as Stream>::Slice, E>
 where
     I: StreamIsPartial + Stream,
     <I as Stream>::Token: AsChar,

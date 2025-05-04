@@ -2,7 +2,7 @@
 name = "gomod-parser"
 version = "0.0.3"
 edition = "2021"
-rust-version = "1.64" # MSRV
+rust-version = "1.65" # MSRV
 
 description = "Simple go.mod parser"
 keywords = ["gomod"]
