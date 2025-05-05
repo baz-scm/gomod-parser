@@ -19,7 +19,7 @@ push = false
 tag = false
 
 [dependencies]
-winnow = "0.6"
+winnow = "0.7"
 
 [dev-dependencies]
 indoc = "2.0"
