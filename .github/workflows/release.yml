@@ -36,6 +36,7 @@ jobs:
     environment: release
     permissions:
       contents: write # for googleapis/release-please-action to create release commit
+      issues: write # for googleapis/release-please-action to create labels
       pull-requests: write # for googleapis/release-please-action to create release PR
     steps:
       - uses: actions/create-github-app-token@v2
