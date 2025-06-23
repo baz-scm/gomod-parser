@@ -1,4 +1,5 @@
 # gomod-parser
+
 [![Build Status](https://github.com/baz-scm/gomod-parser/workflows/PR/badge.svg)](https://github.com/baz-scm/gomod-parser/actions/workflows/pr.yml)
 [![Coverage Status](https://coveralls.io/repos/github/baz-scm/gomod-parser/badge.svg?branch=main)](https://coveralls.io/github/baz-scm/gomod-parser?branch=main)
 [![Crate](https://img.shields.io/crates/v/gomod-parser.svg)](https://crates.io/crates/gomod-parser)
@@ -7,6 +8,7 @@
 A simple `go.mod` file parser based on [winnow](https://crates.io/crates/winnow).
 
 ## Example
+
 ```rust
 use gomod_parser::{GoMod, Module, ModuleDependency};
 use std::str::FromStr;
