@@ -8,7 +8,7 @@ use winnow::token::{any, take_till, take_while};
 use winnow::{dispatch, Parser, Result};
 
 const WHITESPACES: [char; 4] = [' ', '\t', '\r', '\n'];
-const NEWLINE: (char, char) = ('\r', '\n');
+const CRLF: [char; 2] = ['\r', '\n'];
 
 #[derive(Debug, PartialEq, Eq)]
 pub(crate) enum Directive<'a> {
@@ -29,7 +29,7 @@ pub(crate) fn gomod<'a>(input: &mut &'a str) -> Result<Vec<Directive<'a>>> {
 }
 
 fn directive<'a>(input: &mut &'a str) -> Result<Directive<'a>> {
-    let _ = take_while(0.., NEWLINE).parse_next(input)?;
+    let _ = take_while(0.., CRLF).parse_next(input)?;
     dispatch!(peek(not_whitespace);
         "//" => comment,
         "module" => module,
@@ -47,23 +47,22 @@ fn directive<'a>(input: &mut &'a str) -> Result<Directive<'a>> {
 }
 
 fn comment<'a>(input: &mut &'a str) -> Result<Directive<'a>> {
-    let res =
-        preceded((opt(space0), "//", opt(space0)), take_till(0.., NEWLINE)).parse_next(input)?;
-    let _ = take_while(1.., NEWLINE).parse_next(input)?;
+    let res = preceded((opt(space0), "//", opt(space0)), take_till(0.., CRLF)).parse_next(input)?;
+    let _ = take_while(1.., CRLF).parse_next(input)?;
 
     Ok(Directive::Comment(res))
 }
 
 fn module<'a>(input: &mut &'a str) -> Result<Directive<'a>> {
-    let res = preceded(("module", space1), take_till(1.., NEWLINE)).parse_next(input)?;
-    let _ = take_while(1.., NEWLINE).parse_next(input)?;
+    let res = preceded(("module", space1), take_till(1.., CRLF)).parse_next(input)?;
+    let _ = take_while(1.., CRLF).parse_next(input)?;
 
     Ok(Directive::Module(res))
 }
 
 fn go<'a>(input: &mut &'a str) -> Result<Directive<'a>> {
-    let res = preceded(("go", space1), take_till(1.., NEWLINE)).parse_next(input)?;
-    let _ = take_while(1.., NEWLINE).parse_next(input)?;
+    let res = preceded(("go", space1), take_till(1.., CRLF)).parse_next(input)?;
+    let _ = take_while(1.., CRLF).parse_next(input)?;
 
     Ok(Directive::Go(res))
 }
@@ -77,7 +76,7 @@ fn godebug<'a>(input: &mut &'a str) -> Result<Directive<'a>> {
         },
     )
     .parse_next(input)?;
-    let _ = take_while(0.., NEWLINE).parse_next(input)?;
+    let _ = take_while(0.., CRLF).parse_next(input)?;
 
     Ok(Directive::GoDebug(HashMap::from_iter(res)))
 }
@@ -86,12 +85,8 @@ fn godebug_single(input: &mut &str) -> Result<Vec<(String, String)>> {
     // terminate, if `)` is found
     peek(not(')')).parse_next(input)?;
 
-    let (key, _, value) = (
-        take_till(1.., '='),
-        take_while(1.., '='),
-        take_till(1.., WHITESPACES),
-    )
-        .parse_next(input)?;
+    let (key, _, value) =
+        (take_till(1.., '='), '=', take_till(1.., WHITESPACES)).parse_next(input)?;
 
     Ok(vec![(key.into(), value.into())])
 }
@@ -106,15 +101,15 @@ fn godebug_multi(input: &mut &str) -> Result<Vec<(String, String)>> {
 }
 
 fn tool<'a>(input: &mut &'a str) -> Result<Directive<'a>> {
-    let res = preceded(("tool", space1), take_till(1.., NEWLINE)).parse_next(input)?;
-    let _ = take_while(1.., NEWLINE).parse_next(input)?;
+    let res = preceded(("tool", space1), take_till(1.., CRLF)).parse_next(input)?;
+    let _ = take_while(1.., CRLF).parse_next(input)?;
 
     Ok(Directive::Tool(vec![res.to_owned()]))
 }
 
 fn toolchain<'a>(input: &mut &'a str) -> Result<Directive<'a>> {
-    let res = preceded(("toolchain", space1), take_till(1.., NEWLINE)).parse_next(input)?;
-    let _ = take_while(1.., NEWLINE).parse_next(input)?;
+    let res = preceded(("toolchain", space1), take_till(1.., CRLF)).parse_next(input)?;
+    let _ = take_while(1.., CRLF).parse_next(input)?;
 
     Ok(Directive::Toolchain(res))
 }
@@ -128,7 +123,7 @@ fn require<'a>(input: &mut &'a str) -> Result<Directive<'a>> {
         },
     )
     .parse_next(input)?;
-    let _ = take_while(0.., NEWLINE).parse_next(input)?;
+    let _ = take_while(0.., CRLF).parse_next(input)?;
 
     Ok(Directive::Require(res))
 }
@@ -173,7 +168,7 @@ fn exclude<'a>(input: &mut &'a str) -> Result<Directive<'a>> {
         },
     )
     .parse_next(input)?;
-    let _ = take_while(0.., NEWLINE).parse_next(input)?;
+    let _ = take_while(0.., CRLF).parse_next(input)?;
 
     Ok(Directive::Exclude(res))
 }
@@ -187,7 +182,7 @@ fn replace<'a>(input: &mut &'a str) -> Result<Directive<'a>> {
         },
     )
     .parse_next(input)?;
-    let _ = take_while(0.., NEWLINE).parse_next(input)?;
+    let _ = take_while(0.., CRLF).parse_next(input)?;
 
     Ok(Directive::Replace(res))
 }
@@ -249,7 +244,7 @@ fn retract<'a>(input: &mut &'a str) -> Result<Directive<'a>> {
         },
     )
     .parse_next(input)?;
-    let _ = take_while(0.., NEWLINE).parse_next(input)?;
+    let _ = take_while(0.., CRLF).parse_next(input)?;
 
     Ok(Directive::Retract(res))
 }
