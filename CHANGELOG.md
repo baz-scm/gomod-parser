@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.4.1](https://github.com/baz-scm/gomod-parser/compare/v0.4.0...v0.4.1) (2025-06-25)
+
+
+### 🐛 Bug Fixes
+
+* allow release from main branch ([#16](https://github.com/baz-scm/gomod-parser/issues/16)) ([0bb82c8](https://github.com/baz-scm/gomod-parser/commit/0bb82c8737f240f8ba0f5b954c208f4e928a1b7c))
+
 ## [0.4.0](https://github.com/baz-scm/gomod-parser/compare/v0.3.0...v0.4.0) (2025-06-25)
 
 
