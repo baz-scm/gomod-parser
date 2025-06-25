@@ -14,7 +14,7 @@ license = "Apache-2.0"
 authors = ["Baz"]
 
 [package.metadata.release]
-allow-branch = ["HEAD"]
+allow-branch = ["main", "HEAD"]
 push = false
 tag = false
 
