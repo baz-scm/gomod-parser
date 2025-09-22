@@ -55,14 +55,14 @@ fn comment<'a>(input: &mut &'a str) -> Result<Directive<'a>> {
 
 fn module<'a>(input: &mut &'a str) -> Result<Directive<'a>> {
     let res = preceded(("module", space1), take_till(1.., CRLF)).parse_next(input)?;
-    let _ = take_while(1.., CRLF).parse_next(input)?;
+    let _ = take_while(0.., CRLF).parse_next(input)?;
 
     Ok(Directive::Module(res))
 }
 
 fn go<'a>(input: &mut &'a str) -> Result<Directive<'a>> {
     let res = preceded(("go", space1), take_till(1.., CRLF)).parse_next(input)?;
-    let _ = take_while(1.., CRLF).parse_next(input)?;
+    let _ = take_while(0.., CRLF).parse_next(input)?;
 
     Ok(Directive::Go(res))
 }
@@ -102,14 +102,14 @@ fn godebug_multi(input: &mut &str) -> Result<Vec<(String, String)>> {
 
 fn tool<'a>(input: &mut &'a str) -> Result<Directive<'a>> {
     let res = preceded(("tool", space1), take_till(1.., CRLF)).parse_next(input)?;
-    let _ = take_while(1.., CRLF).parse_next(input)?;
+    let _ = take_while(0.., CRLF).parse_next(input)?;
 
     Ok(Directive::Tool(vec![res.to_owned()]))
 }
 
 fn toolchain<'a>(input: &mut &'a str) -> Result<Directive<'a>> {
     let res = preceded(("toolchain", space1), take_till(1.., CRLF)).parse_next(input)?;
-    let _ = take_while(1.., CRLF).parse_next(input)?;
+    let _ = take_while(0.., CRLF).parse_next(input)?;
 
     Ok(Directive::Toolchain(res))
 }

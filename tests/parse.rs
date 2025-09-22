@@ -101,3 +101,18 @@ fn test_carriage_return() {
 
     assert_eq!(gomod.module, "github.com/klauspost/compress".to_string());
 }
+
+#[test]
+fn test_no_trailing_newline() {
+    let file_content = get_test_file_content("tool.mod").trim().to_string(); // remove trailing newline
+
+    let gomod = file_content.parse::<GoMod>().unwrap();
+
+    assert_eq!(
+        gomod.tool,
+        vec![
+            "example.com/mymodule/cmd/mytool1",
+            "example.com/mymodule/cmd/mytool2"
+        ]
+    );
+}
