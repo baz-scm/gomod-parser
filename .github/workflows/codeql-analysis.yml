@@ -11,9 +11,6 @@ on:
 permissions:
   contents: read
 
-env:
-  CODEQL_ENABLE_EXPERIMENTAL_FEATURES: true # CodeQL support for Rust is experimental
-
 jobs:
   analyze:
     name: Analyze
