@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.4.2](https://github.com/baz-scm/gomod-parser/compare/v0.4.1...v0.4.2) (2025-09-25)
+
+
+### 🐛 Bug Fixes
+
+* allow no-trailing newline after any directive ([#21](https://github.com/baz-scm/gomod-parser/issues/21)) ([ca2f774](https://github.com/baz-scm/gomod-parser/commit/ca2f774b4c58d8bf82ef162b13547f1e71ccf7b6))
+
 ## [0.4.1](https://github.com/baz-scm/gomod-parser/compare/v0.4.0...v0.4.1) (2025-06-25)
 
 
