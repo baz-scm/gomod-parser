@@ -25,13 +25,16 @@ pub(crate) enum Directive<'a> {
 }
 
 pub(crate) fn gomod<'a>(input: &mut &'a str) -> Result<Vec<Directive<'a>>> {
-    repeat(0.., directive).parse_next(input)
+    repeat(0.., |i: &mut &'a str| {
+        // check for comments first
+        comment.parse_next(i).or_else(|_| directive.parse_next(i))
+    })
+    .parse_next(input)
 }
 
 fn directive<'a>(input: &mut &'a str) -> Result<Directive<'a>> {
     let _ = take_while(0.., CRLF).parse_next(input)?;
     dispatch!(peek(not_whitespace);
-        "//" => comment,
         "module" => module,
         "go" => go,
         "godebug" => godebug,
@@ -48,7 +51,7 @@ fn directive<'a>(input: &mut &'a str) -> Result<Directive<'a>> {
 
 fn comment<'a>(input: &mut &'a str) -> Result<Directive<'a>> {
     let res = preceded((opt(space0), "//", opt(space0)), take_till(0.., CRLF)).parse_next(input)?;
-    let _ = take_while(1.., CRLF).parse_next(input)?;
+    let _ = take_while(0.., CRLF).parse_next(input)?;
 
     Ok(Directive::Comment(res))
 }
