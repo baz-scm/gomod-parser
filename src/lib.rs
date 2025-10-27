@@ -283,4 +283,27 @@ mod tests {
             }]
         );
     }
+
+    #[test]
+    fn test_comments() {
+        let input = indoc! {r#"
+        module github.com/comments
+
+        // 1st comment
+        //2nd comment
+          // 3rd comment
+        "#};
+
+        let go_mod = GoMod::from_str(input).unwrap();
+
+        assert_eq!(go_mod.module, "github.com/comments".to_string());
+        assert_eq!(
+            go_mod.comment,
+            vec![
+                "1st comment".to_string(),
+                "2nd comment".to_string(),
+                "3rd comment".to_string(),
+            ]
+        );
+    }
 }
