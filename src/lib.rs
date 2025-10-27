@@ -292,7 +292,7 @@ mod tests {
         // 1st comment
         //2nd comment
           // 3rd comment
-        "#};
+          //4th comment"#};
 
         let go_mod = GoMod::from_str(input).unwrap();
 
@@ -303,6 +303,7 @@ mod tests {
                 "1st comment".to_string(),
                 "2nd comment".to_string(),
                 "3rd comment".to_string(),
+                "4th comment".to_string(),
             ]
         );
     }

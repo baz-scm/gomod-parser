@@ -51,7 +51,7 @@ fn directive<'a>(input: &mut &'a str) -> Result<Directive<'a>> {
 
 fn comment<'a>(input: &mut &'a str) -> Result<Directive<'a>> {
     let res = preceded((opt(space0), "//", opt(space0)), take_till(0.., CRLF)).parse_next(input)?;
-    let _ = take_while(1.., CRLF).parse_next(input)?;
+    let _ = take_while(0.., CRLF).parse_next(input)?;
 
     Ok(Directive::Comment(res))
 }
