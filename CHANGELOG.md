@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.4.4](https://github.com/baz-scm/gomod-parser/compare/v0.4.3...v0.4.4) (2026-03-24)
+
+
+### ✨ New Features
+
+* upgrade winnow to v1 ([#30](https://github.com/baz-scm/gomod-parser/issues/30)) ([0fae040](https://github.com/baz-scm/gomod-parser/commit/0fae0401f3e5a7637e24fbb3d7c2a06bc2a69664))
+
 ## [0.4.3](https://github.com/baz-scm/gomod-parser/compare/v0.4.2...v0.4.3) (2025-10-27)
 
 
