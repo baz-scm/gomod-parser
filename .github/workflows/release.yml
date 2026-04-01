@@ -39,7 +39,7 @@ jobs:
       issues: write # for googleapis/release-please-action to create labels
       pull-requests: write # for googleapis/release-please-action to create release PR
     steps:
-      - uses: actions/create-github-app-token@v2
+      - uses: actions/create-github-app-token@v3
         id: app-token
         with:
           app-id: ${{ vars.CI_GITHUB_APP_ID }}
