@@ -53,6 +53,7 @@ pub struct GoMod {
     pub exclude: Vec<ModuleDependency>,
     pub replace: Vec<ModuleReplacement>,
     pub retract: Vec<ModuleRetract>,
+    pub ignore: Vec<String>,
 }
 
 impl std::str::FromStr for GoMod {
@@ -73,6 +74,7 @@ impl std::str::FromStr for GoMod {
                 Directive::Exclude(d) => res.exclude.append(d),
                 Directive::Replace(d) => res.replace.append(d),
                 Directive::Retract(d) => res.retract.append(d),
+                Directive::Ignore(d) => res.ignore.append(d),
             }
         }
 
@@ -282,6 +284,80 @@ mod tests {
                 indirect: false
             }]
         );
+    }
+
+    #[test]
+    fn test_ignore_single() {
+        let input = indoc! {r#"
+        module github.com/ignore-single
+
+        go 1.24
+
+        ignore ./testdata
+        "#};
+
+        let go_mod = GoMod::from_str(input).unwrap();
+
+        assert_eq!(go_mod.ignore, vec!["./testdata".to_string()]);
+    }
+
+    #[test]
+    fn test_ignore_multi() {
+        let input = indoc! {r#"
+        module github.com/ignore-multi
+
+        go 1.24
+
+        ignore (
+            ./testdata
+            ./vendor/temp
+            ./node_modules
+        )
+        "#};
+
+        let go_mod = GoMod::from_str(input).unwrap();
+
+        assert_eq!(
+            go_mod.ignore,
+            vec![
+                "./testdata".to_string(),
+                "./vendor/temp".to_string(),
+                "./node_modules".to_string(),
+            ]
+        );
+    }
+
+    #[test]
+    fn test_ignore_repeated_singles() {
+        let input = indoc! {r#"
+        module github.com/ignore-repeated
+
+        go 1.24
+
+        ignore ./testdata
+        ignore ./vendor/temp
+        "#};
+
+        let go_mod = GoMod::from_str(input).unwrap();
+
+        assert_eq!(
+            go_mod.ignore,
+            vec!["./testdata".to_string(), "./vendor/temp".to_string()]
+        );
+    }
+
+    #[test]
+    fn test_no_line_ending_after_ignore() {
+        let input = indoc! {r#"
+        module github.com/no-line-ending
+
+        ignore (
+            ./testdata
+        )"#};
+
+        let go_mod = GoMod::from_str(input).unwrap();
+
+        assert_eq!(go_mod.ignore, vec!["./testdata".to_string()]);
     }
 
     #[test]
