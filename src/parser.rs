@@ -22,6 +22,7 @@ pub(crate) enum Directive<'a> {
     Exclude(Vec<ModuleDependency>),
     Replace(Vec<ModuleReplacement>),
     Retract(Vec<ModuleRetract>),
+    Ignore(Vec<String>),
 }
 
 pub(crate) fn gomod<'a>(input: &mut &'a str) -> Result<Vec<Directive<'a>>> {
@@ -44,6 +45,7 @@ fn directive<'a>(input: &mut &'a str) -> Result<Directive<'a>> {
         "exclude" => exclude,
         "replace" => replace,
         "retract" => retract,
+        "ignore" => ignore,
         _ => fail,
     )
     .parse_next(input)
@@ -293,4 +295,39 @@ fn retract_multi(input: &mut &str) -> Result<Vec<ModuleRetract>> {
     let _ = (")", multispace0).parse_next(input)?;
 
     Ok(res.into_iter().flatten().collect::<Vec<ModuleRetract>>())
+}
+
+fn ignore<'a>(input: &mut &'a str) -> Result<Directive<'a>> {
+    let res = preceded(
+        ("ignore", space1),
+        dispatch! {peek(any);
+            '(' => ignore_multi,
+            _ => ignore_single,
+        },
+    )
+    .parse_next(input)?;
+    let _ = take_while(0.., CRLF).parse_next(input)?;
+
+    Ok(Directive::Ignore(res))
+}
+
+fn ignore_single(input: &mut &str) -> Result<Vec<String>> {
+    // terminate, if `)` is found
+    peek(not(')')).parse_next(input)?;
+
+    let path = take_till(1.., WHITESPACES).parse_next(input)?;
+
+    // remove any comments added to the same line
+    let _ = opt(comment).parse_next(input)?;
+
+    Ok(vec![path.to_string()])
+}
+
+fn ignore_multi(input: &mut &str) -> Result<Vec<String>> {
+    let _ = ("(", multispace1).parse_next(input)?;
+    let res: Vec<Vec<String>> =
+        repeat(1.., terminated(ignore_single, multispace0)).parse_next(input)?;
+    let _ = (")", multispace0).parse_next(input)?;
+
+    Ok(res.into_iter().flatten().collect::<Vec<String>>())
 }

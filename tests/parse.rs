@@ -92,6 +92,23 @@ fn test_parse_tool() {
 }
 
 #[test]
+fn test_parse_ignore() {
+    let file_content = get_test_file_content("ignore.mod");
+    let gomod = file_content.parse::<GoMod>().unwrap();
+
+    assert_eq!(gomod.module, "github.com/example/ignore".to_string());
+    assert_eq!(
+        gomod.ignore,
+        vec![
+            "./build".to_string(),
+            "./testdata".to_string(),
+            "./vendor/temp".to_string(),
+            "./node_modules".to_string(),
+        ]
+    );
+}
+
+#[test]
 fn test_carriage_return() {
     let file_content = get_test_file_content("compress.mod")
         .replace("\r", "") // Replace any current CR
