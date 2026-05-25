@@ -4,9 +4,11 @@ on:
   push:
     branches:
       - main
-    paths-ignore:
-      - '.github/**'
-      - '.pre-commit-config.yaml'
+    paths:
+      - '**'
+      - '!.github/**'
+      - '.github/workflows/release.yml'
+      - '!.pre-commit-config.yaml'
 
 permissions:
   contents: read
