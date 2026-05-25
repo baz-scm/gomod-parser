@@ -1,5 +1,16 @@
 # Changelog
 
+## [0.5.0](https://github.com/baz-scm/gomod-parser/compare/v0.4.4...v0.5.0) (2026-05-25)
+
+
+### ⚠ BREAKING CHANGES
+
+* support go 1.24 ignore directives ([#35](https://github.com/baz-scm/gomod-parser/issues/35))
+
+### ✨ New Features
+
+* support go 1.24 ignore directives ([#35](https://github.com/baz-scm/gomod-parser/issues/35)) ([a08df30](https://github.com/baz-scm/gomod-parser/commit/a08df30af2fb9eac213f45cfe57b158a992d5559))
+
 ## [0.4.4](https://github.com/baz-scm/gomod-parser/compare/v0.4.3...v0.4.4) (2026-03-24)
 
 
