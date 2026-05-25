@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.5.1](https://github.com/baz-scm/gomod-parser/compare/v0.5.0...v0.5.1) (2026-05-25)
+
+
+### 🐛 Bug Fixes
+
+* install rust in release pipeline ([#37](https://github.com/baz-scm/gomod-parser/issues/37)) ([a03f5dc](https://github.com/baz-scm/gomod-parser/commit/a03f5dcf8a39a43dcd3effc0fa445fe544e8a163))
+
 ## [0.5.0](https://github.com/baz-scm/gomod-parser/compare/v0.4.4...v0.5.0) (2026-05-25)
 
 
