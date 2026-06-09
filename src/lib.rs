@@ -62,7 +62,7 @@ impl std::str::FromStr for GoMod {
     fn from_str(input: &str) -> Result<Self, Self::Err> {
         let mut res = Self::default();
 
-        for directive in &mut gomod.parse(&input).map_err(|e| e.to_string())? {
+        for directive in &mut gomod.parse(input).map_err(|e| e.to_string())? {
             match directive {
                 Directive::Comment(d) => res.comment.push((**d).to_string()),
                 Directive::Module(d) => res.module = (**d).to_string(),
