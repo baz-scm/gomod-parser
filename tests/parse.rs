@@ -125,10 +125,15 @@ fn test_carriage_return() {
 
 #[test]
 fn test_no_trailing_newline() {
-    let file_content = get_test_file_content("trailing.mod");
+    let file_content = get_test_file_content("tool.mod").trim().to_string(); // remove trailing newline
 
-    let gomod = file_content.trim().parse::<GoMod>().unwrap();
+    let gomod = file_content.parse::<GoMod>().unwrap();
 
-    assert_eq!(gomod.module, "myco/mymodule".to_string());
-    assert_eq!(gomod.go.unwrap(), "1.24.1".to_string());
+    assert_eq!(
+        gomod.tool,
+        vec![
+            "example.com/mymodule/cmd/mytool1",
+            "example.com/mymodule/cmd/mytool2"
+        ]
+    );
 }

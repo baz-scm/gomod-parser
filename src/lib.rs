@@ -61,14 +61,6 @@ impl std::str::FromStr for GoMod {
 
     fn from_str(input: &str) -> Result<Self, Self::Err> {
         let mut res = Self::default();
-        let mut input = input.to_owned();
-
-        if !input.ends_with(['\n']) {
-            if cfg!(windows) {
-                input.push('\r');
-            }
-            input.push('\n');
-        }
 
         for directive in &mut gomod.parse(&input).map_err(|e| e.to_string())? {
             match directive {

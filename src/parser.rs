@@ -53,21 +53,21 @@ fn directive<'a>(input: &mut &'a str) -> Result<Directive<'a>> {
 
 fn comment<'a>(input: &mut &'a str) -> Result<Directive<'a>> {
     let res = preceded((opt(space0), "//", opt(space0)), take_till(0.., CRLF)).parse_next(input)?;
-    let _ = take_while(1.., CRLF).parse_next(input)?;
+    let _ = take_while(0.., CRLF).parse_next(input)?;
 
     Ok(Directive::Comment(res))
 }
 
 fn module<'a>(input: &mut &'a str) -> Result<Directive<'a>> {
     let res = preceded(("module", space1), take_till(1.., CRLF)).parse_next(input)?;
-    let _ = take_while(1.., CRLF).parse_next(input)?;
+    let _ = take_while(0.., CRLF).parse_next(input)?;
 
     Ok(Directive::Module(res))
 }
 
 fn go<'a>(input: &mut &'a str) -> Result<Directive<'a>> {
     let res = preceded(("go", space1), take_till(1.., CRLF)).parse_next(input)?;
-    let _ = take_while(1.., CRLF).parse_next(input)?;
+    let _ = take_while(0.., CRLF).parse_next(input)?;
 
     Ok(Directive::Go(res))
 }
@@ -123,7 +123,10 @@ fn tool_single(input: &mut &str) -> Result<Vec<String>> {
     // terminate, if `)` is found
     peek(not(')')).parse_next(input)?;
 
-    let value = terminated(take_till(1.., WHITESPACES), multispace1).parse_next(input)?;
+    let value = terminated(take_till(1.., CRLF), multispace1).parse_next(input)?;
+
+    // remove any comments added to the same line
+    let _ = opt(comment).parse_next(input)?;
 
     Ok(vec![value.into()])
 }
@@ -139,7 +142,7 @@ fn tool_multi(input: &mut &str) -> Result<Vec<String>> {
 
 fn toolchain<'a>(input: &mut &'a str) -> Result<Directive<'a>> {
     let res = preceded(("toolchain", space1), take_till(1.., CRLF)).parse_next(input)?;
-    let _ = take_while(1.., CRLF).parse_next(input)?;
+    let _ = take_while(0.., CRLF).parse_next(input)?;
 
     Ok(Directive::Toolchain(res))
 }

@@ -1,5 +1,3 @@
-> This is a temporary fork! Use the official https://docs.rs/gomod-parser/latest/gomod_parser/ instead.
-
 # gomod-parser
 
 [![Build Status](https://github.com/baz-scm/gomod-parser/workflows/PR/badge.svg)](https://github.com/baz-scm/gomod-parser/actions/workflows/pr.yml)
