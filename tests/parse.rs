@@ -90,7 +90,6 @@ fn test_parse_tool() {
             "github.com/golangci/golangci-lint/v2/cmd/golangci-lint",
             "github.com/sqlc-dev/sqlc/cmd/sqlc",
             "go.temporal.io/sdk/contrib/tools/workflowcheck",
-            "example.com/mymodule/cmd/mytool2"
         ]
     );
 }
@@ -133,7 +132,10 @@ fn test_no_trailing_newline() {
         gomod.tool,
         vec![
             "example.com/mymodule/cmd/mytool1",
-            "example.com/mymodule/cmd/mytool2"
+            "example.com/mymodule/cmd/mytool2",
+            "github.com/golangci/golangci-lint/v2/cmd/golangci-lint",
+            "github.com/sqlc-dev/sqlc/cmd/sqlc",
+            "go.temporal.io/sdk/contrib/tools/workflowcheck",
         ]
     );
 }

@@ -123,7 +123,7 @@ fn tool_single(input: &mut &str) -> Result<Vec<String>> {
     // terminate, if `)` is found
     peek(not(')')).parse_next(input)?;
 
-    let value = terminated(take_till(1.., CRLF), multispace1).parse_next(input)?;
+    let value = take_till(1.., WHITESPACES).parse_next(input)?;
 
     // remove any comments added to the same line
     let _ = opt(comment).parse_next(input)?;
