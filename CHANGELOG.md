@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.5.2](https://github.com/baz-scm/gomod-parser/compare/v0.5.1...v0.5.2) (2026-06-09)
+
+
+### ✨ New Features
+
+* Add multi-line `tool` support. ([#40](https://github.com/baz-scm/gomod-parser/issues/40)) ([35703e2](https://github.com/baz-scm/gomod-parser/commit/35703e2fa15fce870614b6f02505b6b4bc055d5a))
+
 ## [0.5.1](https://github.com/baz-scm/gomod-parser/compare/v0.5.0...v0.5.1) (2026-05-25)
 
 
