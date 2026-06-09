@@ -19,7 +19,10 @@ push = false
 tag = false
 
 [dependencies]
-winnow = { version = "1.0", default-features = false, features = ["ascii", "std"] }
+winnow = { version = "1.0", default-features = false, features = [
+	"ascii",
+	"std",
+] }
 
 [dev-dependencies]
 indoc = "2.0"
