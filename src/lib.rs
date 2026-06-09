@@ -53,6 +53,7 @@ pub struct GoMod {
     pub exclude: Vec<ModuleDependency>,
     pub replace: Vec<ModuleReplacement>,
     pub retract: Vec<ModuleRetract>,
+    pub ignore: Vec<String>,
 }
 
 impl std::str::FromStr for GoMod {
@@ -81,6 +82,7 @@ impl std::str::FromStr for GoMod {
                 Directive::Exclude(d) => res.exclude.append(d),
                 Directive::Replace(d) => res.replace.append(d),
                 Directive::Retract(d) => res.retract.append(d),
+                Directive::Ignore(d) => res.ignore.append(d),
             }
         }
 
@@ -200,7 +202,77 @@ mod tests {
     }
 
     #[test]
-    fn test_no_line_ending() {
+    fn test_no_line_ending_after_module() {
+        let input = indoc! {r#"
+        module github.com/no-line-ending"#};
+
+        let go_mod = GoMod::from_str(input).unwrap();
+
+        assert_eq!(go_mod.module, "github.com/no-line-ending".to_string());
+    }
+
+    #[test]
+    fn test_no_line_ending_after_go() {
+        let input = indoc! {r#"
+        module github.com/no-line-ending
+
+        go 1.24"#};
+
+        let go_mod = GoMod::from_str(input).unwrap();
+
+        assert_eq!(go_mod.go, Some("1.24".to_string()));
+    }
+
+    #[test]
+    fn test_no_line_ending_after_godebug() {
+        let input = indoc! {r#"
+        module github.com/no-line-ending
+
+        godebug (
+            default=go1.21
+            panicnil=1
+        )"#};
+
+        let go_mod = GoMod::from_str(input).unwrap();
+
+        assert_eq!(
+            go_mod.godebug,
+            HashMap::from([
+                ("default".to_string(), "go1.21".to_string()),
+                ("panicnil".to_string(), "1".to_string())
+            ])
+        );
+    }
+
+    #[test]
+    fn test_no_line_ending_after_tool() {
+        let input = indoc! {r#"
+        module github.com/no-line-ending
+
+        tool example.com/mymodule/cmd/mytool1"#};
+
+        let go_mod = GoMod::from_str(input).unwrap();
+
+        assert_eq!(
+            go_mod.tool,
+            vec!["example.com/mymodule/cmd/mytool1".to_string()]
+        );
+    }
+
+    #[test]
+    fn test_no_line_ending_after_toolchain() {
+        let input = indoc! {r#"
+        module github.com/no-line-ending
+
+        toolchain go1.21.1"#};
+
+        let go_mod = GoMod::from_str(input).unwrap();
+
+        assert_eq!(go_mod.toolchain, Some("go1.21.1".to_string()));
+    }
+
+    #[test]
+    fn test_no_line_ending_after_require() {
         let input = indoc! {r#"
         module github.com/no-line-ending
 
@@ -210,7 +282,6 @@ mod tests {
 
         let go_mod = GoMod::from_str(input).unwrap();
 
-        assert_eq!(go_mod.module, "github.com/no-line-ending".to_string());
         assert_eq!(
             go_mod.require,
             vec![ModuleDependency {
@@ -220,6 +291,104 @@ mod tests {
                 },
                 indirect: false
             }]
+        );
+    }
+
+    #[test]
+    fn test_ignore_single() {
+        let input = indoc! {r#"
+        module github.com/ignore-single
+
+        go 1.24
+
+        ignore ./testdata
+        "#};
+
+        let go_mod = GoMod::from_str(input).unwrap();
+
+        assert_eq!(go_mod.ignore, vec!["./testdata".to_string()]);
+    }
+
+    #[test]
+    fn test_ignore_multi() {
+        let input = indoc! {r#"
+        module github.com/ignore-multi
+
+        go 1.24
+
+        ignore (
+            ./testdata
+            ./vendor/temp
+            ./node_modules
+        )
+        "#};
+
+        let go_mod = GoMod::from_str(input).unwrap();
+
+        assert_eq!(
+            go_mod.ignore,
+            vec![
+                "./testdata".to_string(),
+                "./vendor/temp".to_string(),
+                "./node_modules".to_string(),
+            ]
+        );
+    }
+
+    #[test]
+    fn test_ignore_repeated_singles() {
+        let input = indoc! {r#"
+        module github.com/ignore-repeated
+
+        go 1.24
+
+        ignore ./testdata
+        ignore ./vendor/temp
+        "#};
+
+        let go_mod = GoMod::from_str(input).unwrap();
+
+        assert_eq!(
+            go_mod.ignore,
+            vec!["./testdata".to_string(), "./vendor/temp".to_string()]
+        );
+    }
+
+    #[test]
+    fn test_no_line_ending_after_ignore() {
+        let input = indoc! {r#"
+        module github.com/no-line-ending
+
+        ignore (
+            ./testdata
+        )"#};
+
+        let go_mod = GoMod::from_str(input).unwrap();
+
+        assert_eq!(go_mod.ignore, vec!["./testdata".to_string()]);
+    }
+
+    #[test]
+    fn test_comments() {
+        let input = indoc! {r#"
+        module github.com/comments
+
+        // 1st comment
+        //2nd comment
+          // 3rd comment
+          //4th comment"#};
+
+        let go_mod = GoMod::from_str(input).unwrap();
+
+        assert_eq!(go_mod.module, "github.com/comments".to_string());
+        assert_eq!(
+            go_mod.comment,
+            vec![
+                "1st comment".to_string(),
+                "2nd comment".to_string(),
+                "3rd comment".to_string(),
+                "4th comment".to_string(),
+            ]
         );
     }
 }

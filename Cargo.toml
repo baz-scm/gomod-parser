@@ -1,8 +1,8 @@
 [package]
-name = "gomod-parser2"
-version = "0.4.2"
+name = "gomod-parser"
+version = "0.5.1"
 edition = "2021"
-rust-version = "1.65"  # MSRV
+rust-version = "1.65" # MSRV
 
 description = "Simple go.mod parser"
 keywords = ["gomod"]
@@ -14,12 +14,15 @@ license = "Apache-2.0"
 authors = ["Baz"]
 
 [package.metadata.release]
-allow-branch = ["HEAD"]
+allow-branch = ["main", "HEAD"]
 push = false
 tag = false
 
 [dependencies]
-winnow = "0.7"
+winnow = { version = "1.0", default-features = false, features = [
+	"ascii",
+	"std",
+] }
 
 [dev-dependencies]
 indoc = "2.0"

@@ -1,4 +1,4 @@
-use gomod_parser2::GoMod;
+use gomod_parser::GoMod;
 use std::collections::HashMap;
 use std::fs::read_to_string;
 use std::path::PathBuf;
@@ -90,6 +90,24 @@ fn test_parse_tool() {
             "github.com/golangci/golangci-lint/v2/cmd/golangci-lint",
             "github.com/sqlc-dev/sqlc/cmd/sqlc",
             "go.temporal.io/sdk/contrib/tools/workflowcheck",
+            "example.com/mymodule/cmd/mytool2"
+        ]
+    );
+}
+
+#[test]
+fn test_parse_ignore() {
+    let file_content = get_test_file_content("ignore.mod");
+    let gomod = file_content.parse::<GoMod>().unwrap();
+
+    assert_eq!(gomod.module, "github.com/example/ignore".to_string());
+    assert_eq!(
+        gomod.ignore,
+        vec![
+            "./build".to_string(),
+            "./testdata".to_string(),
+            "./vendor/temp".to_string(),
+            "./node_modules".to_string(),
         ]
     );
 }

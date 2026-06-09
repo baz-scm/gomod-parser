@@ -4,9 +4,11 @@ on:
   push:
     branches:
       - main
-    paths-ignore:
-      - '.github/**'
-      - '.pre-commit-config.yaml'
+    paths:
+      - '**'
+      - '!.github/**'
+      - '.github/workflows/release.yml'
+      - '!.pre-commit-config.yaml'
 
 permissions:
   contents: read
@@ -16,7 +18,7 @@ jobs:
     name: coverage
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v6
       - uses: actions-rust-lang/setup-rust-toolchain@v1
         with:
           toolchain: stable
@@ -32,19 +34,19 @@ jobs:
 
   release-please:
     needs: coverage
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-slim
     environment: release
     permissions:
       contents: write # for googleapis/release-please-action to create release commit
       issues: write # for googleapis/release-please-action to create labels
       pull-requests: write # for googleapis/release-please-action to create release PR
     steps:
-      - uses: actions/create-github-app-token@v2
+      - uses: actions/create-github-app-token@v3
         id: app-token
         with:
-          app-id: ${{ vars.CI_GITHUB_APP_ID }}
+          client-id: ${{ vars.CI_GITHUB_CLIENT_ID }}
           private-key: ${{ secrets.CI_GITHUB_APP_PRIVATE_KEY }}
-      - uses: googleapis/release-please-action@v4
+      - uses: googleapis/release-please-action@v5
         id: release
         with:
           token: ${{ steps.app-token.outputs.token }}
@@ -56,10 +58,13 @@ jobs:
   release:
     if: ${{ needs.release-please.outputs.release_created }}
     needs: release-please
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-slim
     environment: release
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v6
+      - uses: actions-rust-lang/setup-rust-toolchain@v1
+        with:
+          toolchain: stable
       - uses: taiki-e/install-action@v2
         with:
           tool: cargo-release
