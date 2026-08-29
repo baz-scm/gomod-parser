@@ -383,4 +383,33 @@ mod tests {
             ]
         );
     }
+
+    #[test]
+    fn test_directive_inline_comments() {
+        let input = indoc! {r#"
+        module github.com/inline-comments
+
+        exclude (
+            // 1st comment
+              //2nd comment
+            example.com/dependency v1.2.3
+              // 3rd comment
+            //4th comment
+        )"#};
+
+        let go_mod = GoMod::from_str(input).unwrap();
+
+        assert_eq!(go_mod.module, "github.com/inline-comments".to_string());
+        assert_eq!(
+            go_mod.exclude,
+            vec![ModuleDependency {
+                module: Module {
+                    module_path: "example.com/dependency".to_string(),
+                    version: "v1.2.3".to_string(),
+                },
+                indirect: false,
+            }]
+        );
+        assert!(go_mod.comment.is_empty());
+    }
 }

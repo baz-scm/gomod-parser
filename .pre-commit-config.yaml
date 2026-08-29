@@ -13,3 +13,9 @@ repos:
         types: [ rust ]
         entry: cargo clippy --workspace -- -D warnings
         pass_filenames: false
+      - id: check_test
+        name: check test
+        language: system
+        types: [ rust ]
+        entry: cargo check --tests --workspace
+        pass_filenames: false

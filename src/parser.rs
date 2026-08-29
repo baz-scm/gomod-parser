@@ -2,7 +2,8 @@ use crate::combinator::not_whitespace;
 use crate::{Module, ModuleDependency, ModuleReplacement, ModuleRetract, Replacement};
 use std::collections::HashMap;
 use winnow::ascii::{multispace0, multispace1, space0, space1};
-use winnow::combinator::{fail, not, opt, peek, preceded, repeat, terminated};
+use winnow::combinator::{alt, fail, not, opt, peek, preceded, repeat, terminated};
+use winnow::error::ContextError;
 use winnow::stream::AsChar;
 use winnow::token::{any, take_till, take_while};
 use winnow::{dispatch, Parser, Result};
@@ -58,6 +59,29 @@ fn comment<'a>(input: &mut &'a str) -> Result<Directive<'a>> {
     Ok(Directive::Comment(res))
 }
 
+fn multi<'a, T, P>(input: &mut &'a str, mut entry: P) -> Result<Vec<T>>
+where
+    P: Parser<&'a str, Vec<T>, ContextError>,
+{
+    ("(", multispace1).parse_next(input)?;
+
+    let entries: Vec<Option<Vec<T>>> = repeat(
+        1..,
+        terminated(
+            alt((
+                comment.map(|_| None), // skips any comments inside a multiline directive
+                |input: &mut &'a str| entry.parse_next(input).map(Some),
+            )),
+            multispace0,
+        ),
+    )
+    .parse_next(input)?;
+
+    (")", multispace0).parse_next(input)?;
+
+    Ok(entries.into_iter().flatten().flatten().collect())
+}
+
 fn module<'a>(input: &mut &'a str) -> Result<Directive<'a>> {
     let res = preceded(("module", space1), take_till(1.., CRLF)).parse_next(input)?;
     let _ = take_while(0.., CRLF).parse_next(input)?;
@@ -97,12 +121,7 @@ fn godebug_single(input: &mut &str) -> Result<Vec<(String, String)>> {
 }
 
 fn godebug_multi(input: &mut &str) -> Result<Vec<(String, String)>> {
-    let _ = ("(", multispace1).parse_next(input)?;
-    let res: Vec<Vec<(String, String)>> =
-        repeat(1.., terminated(godebug_single, multispace0)).parse_next(input)?;
-    let _ = (")", multispace0).parse_next(input)?;
-
-    Ok(res.into_iter().flatten().collect::<Vec<(String, String)>>())
+    multi(input, godebug_single)
 }
 
 fn tool<'a>(input: &mut &'a str) -> Result<Directive<'a>> {
@@ -132,12 +151,7 @@ fn tool_single(input: &mut &str) -> Result<Vec<String>> {
 }
 
 fn tool_multi(input: &mut &str) -> Result<Vec<String>> {
-    let _ = ("(", multispace1).parse_next(input)?;
-    let res: Vec<Vec<String>> =
-        repeat(1.., terminated(tool_single, multispace0)).parse_next(input)?;
-    let _ = (")", multispace0).parse_next(input)?;
-
-    Ok(res.into_iter().flatten().collect::<Vec<String>>())
+    multi(input, tool_single)
 }
 
 fn toolchain<'a>(input: &mut &'a str) -> Result<Directive<'a>> {
@@ -184,12 +198,7 @@ fn require_single(input: &mut &str) -> Result<Vec<ModuleDependency>> {
 }
 
 fn require_multi(input: &mut &str) -> Result<Vec<ModuleDependency>> {
-    let _ = ("(", multispace1).parse_next(input)?;
-    let res: Vec<Vec<ModuleDependency>> =
-        repeat(1.., terminated(require_single, multispace0)).parse_next(input)?;
-    let _ = (")", multispace0).parse_next(input)?;
-
-    Ok(res.into_iter().flatten().collect::<Vec<ModuleDependency>>())
+    multi(input, require_single)
 }
 
 fn exclude<'a>(input: &mut &'a str) -> Result<Directive<'a>> {
@@ -257,15 +266,7 @@ fn replace_single(input: &mut &str) -> Result<Vec<ModuleReplacement>> {
 }
 
 fn replace_multi(input: &mut &str) -> Result<Vec<ModuleReplacement>> {
-    let _ = ("(", multispace1).parse_next(input)?;
-    let res: Vec<Vec<ModuleReplacement>> =
-        repeat(1.., terminated(replace_single, multispace0)).parse_next(input)?;
-    let _ = (")", multispace0).parse_next(input)?;
-
-    Ok(res
-        .into_iter()
-        .flatten()
-        .collect::<Vec<ModuleReplacement>>())
+    multi(input, replace_single)
 }
 
 fn retract<'a>(input: &mut &'a str) -> Result<Directive<'a>> {
@@ -317,12 +318,7 @@ fn version_single(input: &mut &str) -> Result<ModuleRetract> {
 }
 
 fn retract_multi(input: &mut &str) -> Result<Vec<ModuleRetract>> {
-    let _ = ("(", multispace1).parse_next(input)?;
-    let res: Vec<Vec<ModuleRetract>> =
-        repeat(1.., terminated(retract_single, multispace0)).parse_next(input)?;
-    let _ = (")", multispace0).parse_next(input)?;
-
-    Ok(res.into_iter().flatten().collect::<Vec<ModuleRetract>>())
+    multi(input, retract_single)
 }
 
 fn ignore<'a>(input: &mut &'a str) -> Result<Directive<'a>> {
@@ -352,10 +348,5 @@ fn ignore_single(input: &mut &str) -> Result<Vec<String>> {
 }
 
 fn ignore_multi(input: &mut &str) -> Result<Vec<String>> {
-    let _ = ("(", multispace1).parse_next(input)?;
-    let res: Vec<Vec<String>> =
-        repeat(1.., terminated(ignore_single, multispace0)).parse_next(input)?;
-    let _ = (")", multispace0).parse_next(input)?;
-
-    Ok(res.into_iter().flatten().collect::<Vec<String>>())
+    multi(input, ignore_single)
 }
