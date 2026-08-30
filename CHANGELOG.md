@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.5.3](https://github.com/baz-scm/gomod-parser/compare/v0.5.2...v0.5.3) (2026-08-30)
+
+
+### 🐛 Bug Fixes
+
+* skips comments inside multiline directives ([#47](https://github.com/baz-scm/gomod-parser/issues/47)) ([03ae6d6](https://github.com/baz-scm/gomod-parser/commit/03ae6d66a4abf2d05d052ee72a7574256dad477b))
+
 ## [0.5.2](https://github.com/baz-scm/gomod-parser/compare/v0.5.1...v0.5.2) (2026-06-09)
 
 
