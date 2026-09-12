@@ -1,4 +1,4 @@
-use gomod_parser::GoMod;
+use gomod_parser::{GoMod, Replacement};
 use std::collections::HashMap;
 use std::fs::read_to_string;
 use std::path::PathBuf;
@@ -138,4 +138,60 @@ fn test_no_trailing_newline() {
             "go.temporal.io/sdk/contrib/tools/workflowcheck",
         ]
     );
+}
+
+fn assert_spans_match(file_content: &str, gomod: &GoMod) {
+    assert_eq!(&file_content[gomod.module_span.clone()], gomod.module);
+
+    for dependency in gomod.require.iter().chain(gomod.exclude.iter()) {
+        let module = &dependency.module;
+        assert_eq!(&file_content[module.path_span.clone()], module.module_path);
+        assert_eq!(&file_content[module.version_span.clone()], module.version);
+    }
+
+    for replacement in &gomod.replace {
+        assert_eq!(
+            &file_content[replacement.path_span.clone()],
+            replacement.module_path
+        );
+        match (&replacement.version, &replacement.version_span) {
+            (Some(version), Some(span)) => assert_eq!(&file_content[span.clone()], version),
+            (None, None) => {}
+            (version, span) => panic!("version {version:?} does not match span {span:?}"),
+        }
+        if let Replacement::Module(module) = &replacement.replacement {
+            assert_eq!(&file_content[module.path_span.clone()], module.module_path);
+            assert_eq!(&file_content[module.version_span.clone()], module.version);
+        }
+    }
+}
+
+#[test]
+fn test_spans_on_fixtures() {
+    for file_name in [
+        "compress.mod",
+        "docker_docs.mod",
+        "godebug.mod",
+        "ignore.mod",
+        "iris.mod",
+        "kubernetes.mod",
+        "prometheus.mod",
+        "tool.mod",
+    ] {
+        let file_content = get_test_file_content(file_name);
+        let gomod = file_content.parse::<GoMod>().unwrap();
+
+        assert_spans_match(&file_content, &gomod);
+    }
+}
+
+#[test]
+fn test_spans_with_carriage_return() {
+    let file_content = get_test_file_content("compress.mod")
+        .replace("\r", "")
+        .replace("\n", "\r\n");
+
+    let gomod = file_content.parse::<GoMod>().unwrap();
+
+    assert_spans_match(&file_content, &gomod);
 }

@@ -28,11 +28,36 @@ assert_eq!(go_mod.go, Some("1.21".to_string()));
 assert_eq!(
     go_mod.require,
     vec![ModuleDependency {
-        module: Module {
-            module_path: "golang.org/x/net".to_string(),
-            version: "v0.20.0".to_string()
-        },
+        module: Module::new("golang.org/x/net", "v0.20.0"),
         indirect: false
     }]
 );
 ```
+
+## Positions
+
+Every parsed module path and version carries its `Span` — a byte offset range
+into the input — which makes the parser usable as a language server backend
+(diagnostics, inlay hints, code actions):
+
+```rust
+use gomod_parser::GoMod;
+use std::str::FromStr;
+
+let input = "module github.com/example\n\nrequire golang.org/x/net v0.20.0\n";
+
+let go_mod = GoMod::from_str(input).unwrap();
+let dependency = &go_mod.require[0];
+
+assert_eq!(&input[dependency.module.path_span.clone()], "golang.org/x/net");
+assert_eq!(&input[dependency.module.version_span.clone()], "v0.20.0");
+```
+
+The `module` directive exposes its own `GoMod::module_span`, and `replace`
+directives carry the same pair of spans on `ModuleReplacement` — with
+`version_span` set to `None` for an unversioned source — plus the spans of the
+nested `Module` when the destination is a module rather than a file path. Use
+`Module::new` and `ModuleReplacement::new` to build values without spans.
+
+Spans are ignored by `PartialEq`, so values parsed from different files still
+compare equal by path and version.
