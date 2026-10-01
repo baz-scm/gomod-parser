@@ -1,5 +1,16 @@
 # Changelog
 
+## [0.6.0](https://github.com/baz-scm/gomod-parser/compare/v0.5.3...v0.6.0) (2026-10-01)
+
+
+### ⚠ BREAKING CHANGES
+
+* expose byte spans for module paths and versions ([#46](https://github.com/baz-scm/gomod-parser/issues/46))
+
+### ✨ New Features
+
+* expose byte spans for module paths and versions ([#46](https://github.com/baz-scm/gomod-parser/issues/46)) ([74d8b89](https://github.com/baz-scm/gomod-parser/commit/74d8b8963e6026f0010f13467061646c35bdd064))
+
 ## [0.5.3](https://github.com/baz-scm/gomod-parser/compare/v0.5.2...v0.5.3) (2026-08-30)
 
 
