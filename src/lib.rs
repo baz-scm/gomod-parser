@@ -616,4 +616,28 @@ mod tests {
         );
         assert!(go_mod.comment.is_empty());
     }
+
+    #[test]
+    fn test_require_version_glued_to_comment() {
+        let input = indoc! {r#"
+        module github.com/glued
+
+        require example.com/a v1.2.3// indirect
+        require (
+            example.com/b v1.0.0// indirect
+            example.com/c v2.0.0//note
+        )"#};
+
+        let go_mod = GoMod::from_str(input).unwrap();
+
+        let got: Vec<_> = go_mod
+            .require
+            .iter()
+            .map(|r| (r.module.version.as_str(), r.indirect))
+            .collect();
+        assert_eq!(
+            got,
+            vec![("v1.2.3", true), ("v1.0.0", true), ("v2.0.0", false)]
+        );
+    }
 }
