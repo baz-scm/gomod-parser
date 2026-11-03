@@ -186,7 +186,7 @@ fn require_single(input: &mut LocatingSlice<&str>) -> Result<Vec<ModuleDependenc
     let ((module_path, path_span), _, (version, version_span)) = (
         take_till(1.., AsChar::is_space).with_span(),
         space1,
-        take_till(1.., WHITESPACES).with_span(),
+        take_till(1.., |c: char| WHITESPACES.contains(&c) || c == '/').with_span(),
     )
         .parse_next(input)?;
 
