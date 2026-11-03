@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.6.1](https://github.com/baz-scm/gomod-parser/compare/v0.6.0...v0.6.1) (2026-11-03)
+
+
+### 🐛 Bug Fixes
+
+* stop a require version at a glued // comment ([#52](https://github.com/baz-scm/gomod-parser/issues/52)) ([8e4df2e](https://github.com/baz-scm/gomod-parser/commit/8e4df2ecdbfb535a0559396d1057737bf307a476))
+
 ## [0.6.0](https://github.com/baz-scm/gomod-parser/compare/v0.5.3...v0.6.0) (2026-10-01)
 
 
