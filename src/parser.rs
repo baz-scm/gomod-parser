@@ -4,8 +4,8 @@ use std::collections::HashMap;
 use winnow::ascii::{multispace0, multispace1, space0, space1};
 use winnow::combinator::{alt, fail, not, opt, peek, preceded, repeat, terminated};
 use winnow::error::ContextError;
-use winnow::stream::{AsChar, LocatingSlice};
-use winnow::token::{any, take_till, take_while};
+use winnow::stream::{AsChar, ContainsToken, LocatingSlice};
+use winnow::token::{any, none_of, take_till, take_while};
 use winnow::{dispatch, Parser, Result};
 
 const WHITESPACES: [char; 4] = [' ', '\t', '\r', '\n'];
@@ -14,7 +14,7 @@ const CRLF: [char; 2] = ['\r', '\n'];
 #[derive(Debug, PartialEq, Eq)]
 pub(crate) enum Directive<'a> {
     Comment(&'a str),
-    Module(&'a str, Span),
+    Module(String, Span),
     Go(&'a str),
     GoDebug(HashMap<String, String>),
     Tool(Vec<String>),
@@ -82,9 +82,44 @@ where
     Ok(entries.into_iter().flatten().flatten().collect())
 }
 
+fn token<'a, S>(terminators: S) -> impl Parser<LocatingSlice<&'a str>, (String, Span), ContextError>
+where
+    S: ContainsToken<char>,
+{
+    alt((
+        quoted,
+        take_till(1.., terminators)
+            .with_span()
+            .map(|(value, span): (&str, Span)| (value.to_string(), span)),
+    ))
+}
+
+fn quoted(input: &mut LocatingSlice<&str>) -> Result<(String, Span)> {
+    ('"', repeat(0.., quoted_char), '"')
+        .map(|(_, value, _): (char, String, char)| value)
+        .with_span()
+        .parse_next(input)
+}
+
+fn quoted_char(input: &mut LocatingSlice<&str>) -> Result<char> {
+    alt((
+        preceded('\\', any).map(unescape),
+        none_of(['"', '\\', '\r', '\n']),
+    ))
+    .parse_next(input)
+}
+
+const fn unescape(escaped: char) -> char {
+    match escaped {
+        'n' => '\n',
+        'r' => '\r',
+        't' => '\t',
+        other => other,
+    }
+}
+
 fn module<'a>(input: &mut LocatingSlice<&'a str>) -> Result<Directive<'a>> {
-    let (res, span) =
-        preceded(("module", space1), take_till(1.., WHITESPACES).with_span()).parse_next(input)?;
+    let (res, span) = preceded(("module", space1), token(WHITESPACES)).parse_next(input)?;
 
     // remove any comments added to the same line
     let _ = (space0, opt(comment)).parse_next(input)?;
@@ -184,9 +219,9 @@ fn require_single(input: &mut LocatingSlice<&str>) -> Result<Vec<ModuleDependenc
     peek(not(')')).parse_next(input)?;
 
     let ((module_path, path_span), _, (version, version_span)) = (
-        take_till(1.., AsChar::is_space).with_span(),
+        token(AsChar::is_space),
         space1,
-        take_till(1.., |c: char| WHITESPACES.contains(&c) || c == '/').with_span(),
+        token(|c: char| WHITESPACES.contains(&c) || c == '/'),
     )
         .parse_next(input)?;
 
@@ -194,8 +229,8 @@ fn require_single(input: &mut LocatingSlice<&str>) -> Result<Vec<ModuleDependenc
 
     Ok(vec![ModuleDependency {
         module: Module {
-            module_path: module_path.to_string(),
-            version: version.to_string(),
+            module_path,
+            version,
             path_span,
             version_span,
         },
@@ -240,44 +275,37 @@ fn replace_single(input: &mut LocatingSlice<&str>) -> Result<Vec<ModuleReplaceme
     peek(not(')')).parse_next(input)?;
 
     let ((src_path, src_path_span), src_version) = (
-        terminated(take_till(1.., AsChar::is_space).with_span(), space1),
+        terminated(token(AsChar::is_space), space1),
         opt(terminated(
-            preceded(
-                peek(not("=>")),
-                take_till(1.., AsChar::is_space).with_span(),
-            ),
+            preceded(peek(not("=>")), token(AsChar::is_space)),
             space1,
         )),
     )
         .parse_next(input)?;
     let _ = ("=>", space1).parse_next(input)?;
     let ((dest_path, dest_path_span), dest_version) = (
-        terminated(take_till(1.., WHITESPACES).with_span(), space0),
-        opt(terminated(
-            take_till(1.., WHITESPACES).with_span(),
-            multispace1,
-        )),
+        terminated(token(WHITESPACES), space0),
+        opt(terminated(token(WHITESPACES), multispace1)),
     )
         .parse_next(input)?;
 
     let replacement = dest_version.map_or_else(
-        || Replacement::FilePath(dest_path.to_string()),
+        || Replacement::FilePath(dest_path.clone()),
         |(version, version_span)| {
             Replacement::Module(Module {
-                module_path: dest_path.to_string(),
-                version: version.to_string(),
+                module_path: dest_path.clone(),
+                version,
                 path_span: dest_path_span,
                 version_span,
             })
         },
     );
 
-    let (src_version, src_version_span) = src_version.map_or((None, None), |(version, span)| {
-        (Some(version.to_string()), Some(span))
-    });
+    let (src_version, src_version_span) =
+        src_version.map_or((None, None), |(version, span)| (Some(version), Some(span)));
 
     Ok(vec![ModuleReplacement {
-        module_path: src_path.to_string(),
+        module_path: src_path,
         version: src_version,
         path_span: src_path_span,
         version_span: src_version_span,
