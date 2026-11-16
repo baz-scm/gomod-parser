@@ -568,6 +568,82 @@ mod tests {
     }
 
     #[test]
+    fn test_quoted_paths() {
+        let input = indoc! {r#"
+        module "example.com/app"
+
+        go 1.22
+
+        require "example.com/lib" v1.0.0
+
+        exclude "example.com/lib" "v0.9.0"
+
+        replace "example.com/lib" => "../lib"
+        "#};
+
+        let go_mod = GoMod::from_str(input).unwrap();
+
+        assert_eq!(go_mod.module, "example.com/app".to_string());
+        assert_eq!(&input[go_mod.module_span.clone()], "\"example.com/app\"");
+        assert_eq!(
+            go_mod.require,
+            vec![ModuleDependency {
+                module: Module::new("example.com/lib", "v1.0.0"),
+                indirect: false
+            }]
+        );
+        assert_eq!(
+            go_mod.exclude,
+            vec![ModuleDependency {
+                module: Module::new("example.com/lib", "v0.9.0"),
+                indirect: false
+            }]
+        );
+        assert_eq!(
+            go_mod.replace,
+            vec![ModuleReplacement::new(
+                "example.com/lib",
+                None,
+                Replacement::FilePath("../lib".to_string())
+            )]
+        );
+
+        let replacement = &go_mod.replace[0];
+        assert_eq!(&input[replacement.path_span.clone()], "\"example.com/lib\"");
+    }
+
+    #[test]
+    fn test_quoted_replacement_module() {
+        let input = indoc! {r#"
+        module example.com/app
+
+        replace (
+            "example.com/lib" "v1.0.0" => "example.com/fork" "v1.0.1"
+        )
+        "#};
+
+        let go_mod = GoMod::from_str(input).unwrap();
+
+        assert_eq!(
+            go_mod.replace,
+            vec![ModuleReplacement::new(
+                "example.com/lib",
+                Some("v1.0.0".to_string()),
+                Replacement::Module(Module::new("example.com/fork", "v1.0.1"))
+            )]
+        );
+    }
+
+    #[test]
+    fn test_quoted_path_with_escapes() {
+        let input = "module \"example.com/a\\\\b\"\n";
+
+        let go_mod = GoMod::from_str(input).unwrap();
+
+        assert_eq!(go_mod.module, "example.com/a\\b".to_string());
+    }
+
+    #[test]
     fn test_comments() {
         let input = indoc! {r#"
         module github.com/comments
